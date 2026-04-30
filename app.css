@@ -1,0 +1,41 @@
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1rem;
+    background-color: #2C2C2C;
+    border-bottom: gray 1px solid;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-logo {
+    text-decoration: none;
+    color: white;          
+    font-size: 1.5rem;      
+    font-weight: bold;
+}
+
+.nav-pills .nav-link{
+    color: white;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #612D53;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+body {
+    padding-top: 80px; 
+    background: linear-gradient(135deg,#2C2C2C 60%, #612D53);
+    background-attachment: fixed;
+    font-family: 'Montserrat', sans-serif;
+    color: white;
+}

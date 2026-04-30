@@ -48,7 +48,7 @@ async function performSearch() {
                 li.innerHTML = `
                     <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/50'}" width="50" style="vertical-align: middle; margin-right: 10px;">
                     <strong>${movie.Title}</strong> (${movie.Year})
-                    <button onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${movie.Poster}')">Add to Watchlist</button>
+                    <button class="btn btn-outline-secondary rounded-pill" onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${movie.Poster}')"><i class="bi bi-plus"></i></button>
                 `;
                 container.appendChild(li);
             });
@@ -89,7 +89,7 @@ async function fetchTrendingMovies() {
             li.innerHTML = `
                 <img src="${movie.Poster}" width="50">
                 <strong>${movie.Title}</strong> (${movie.Year})
-                <button onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${movie.Poster}')">Add to Watchlist</button>
+                <button class="btn btn-outline-secondary rounded-pill" onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${movie.Poster}')"><i class="bi bi-plus"></i></button>
             `;
             container.appendChild(li);
         });
@@ -110,7 +110,7 @@ function displayWatchlist() {
         <li style="list-style:none; margin-bottom: 10px;">
             <img src="${movie.poster}" width="50" style="vertical-align: middle; margin-right: 10px;">
             <strong>${movie.title}</strong> (${movie.year})
-            <button onclick="removeFromWatchlist(${index})">Remove</button>
+            <button class="btn btn-outline-secondary rounded-pill" onclick="removeFromWatchlist(${index})"><i class="bi bi-trash"></i></button>
         </li>
     `).join('');
 }
