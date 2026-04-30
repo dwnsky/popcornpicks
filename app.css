@@ -39,3 +39,16 @@ body {
     font-family: 'Montserrat', sans-serif;
     color: white;
 }
+
+.container-profile {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+}
+#profile-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
