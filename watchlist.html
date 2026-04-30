@@ -4,17 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PopcornPicks</title>
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css"
+    rel="stylesheet" integrity="sha384-
+    SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7"
+    crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="app.css">
 </head>
 <body>
-    <h1>PopcornPicks</h1>
-    <p>Welcome to PopcornPicks!</p>
-    <nav>
-        <ul>
-            <li><a href="index.html">Trending</a></li>
-            <li><a href="explore.html">Explore</a></li>
-            <li><a href="watchlist.html">Watchlist</a></li>
-        </ul>
-    </nav>
+        <header>
+            <a href="index.html" class="brand-logo">
+                <i class="bi bi-film"></i> PopcornPicks
+            </a>
+            <div class="nav-pills">
+                <ul class="nav">
+                    <li class="nav-item"><a href="index.html" class="nav-link rounded-pill"><i class="bi bi-fire"></i> Trending</a></li>
+                    <li class="nav-item"><a href="explore.html" class="nav-link rounded-pill"><i class="bi bi-search"></i> Explore</a></li>
+                    <li class="nav-item"><a href="watchlist.html" class="nav-link active rounded-pill"><i class="bi bi-bookmark-star-fill"></i> Watchlist</a></li>
+                </ul>
+            </div>
+            <div class="user-actions">
+                <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-person"></i></button>
+                <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </header>
+
 
     <div id="Watchlist">
     <h2>Watchlist</h2>
