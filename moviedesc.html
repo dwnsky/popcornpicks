@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PopcornPicks</title>
+     <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css"
+    rel="stylesheet" integrity="sha384-
+    SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7"
+    crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <header>
+            <a href="index.html" class="brand-logo">
+                <i class="bi bi-film"></i> PopcornPicks
+            </a>
+            <div class="nav-pills">
+                <ul class="nav">
+                    <li class="nav-item"><a href="index.html" class="nav-link rounded-pill"><i class="bi bi-fire"></i> Trending</a></li>
+                    <li class="nav-item"><a href="explore.html" class="nav-link active rounded-pill"><i class="bi bi-search"></i> Explore</a></li>
+                    <li class="nav-item"><a href="watchlist.html" class="nav-link rounded-pill"><i class="bi bi-bookmark-star-fill"></i> Watchlist</a></li>
+                </ul>
+            </div>
+            <div class="user-actions">
+                <a href="profile.html">
+                    <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-person"></i></button>
+                </a>
+                <button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </header>
+
+        
+
+<body class="bg-dark text-light">
+
+<div class="container mt-5">
+
+    <div class="row">
+
+        <!-- LEFT SIDE -->
+        <div class="col-md-4">
+            <img id="poster" class="img-fluid rounded mb-3">
+
+            <button id="watchlistBtn" class="btn btn-light w-100 mb-2">
+                + Add to Watchlist
+            </button>
+
+            <a id="trailerLink" target="_blank" class="btn btn-danger w-100">
+                ▶ Watch Trailer
+            </a>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="col-md-8">
+
+            <h1 id="title"></h1>
+
+            <p class="text-warning fw-bold">
+                ⭐ <span id="ratingIMDB"></span>
+            </p>
+
+            <h6 class="text-danger">STORYLINE</h6>
+            <p id="desc"></p>
+
+            <hr>
+
+            <h6>RATE THIS MOVIE</h6>
+
+            <!-- ⭐ Stars -->
+            <div id="stars"></div>
+
+            <!-- Review box -->
+            <textarea id="reviewInput" class="form-control mt-2" placeholder="Tell us what you thought..."></textarea>
+
+            <button class="btn btn-secondary mt-2" onclick="saveReview()">Post Review</button>
+
+            <!-- Display review -->
+            <div id="userReview" class="mt-4"></div>
+
+        </div>
+
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
