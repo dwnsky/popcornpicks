@@ -23,8 +23,6 @@
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
             </div>
-
-
         </header>
         
     <p>Welcome to your profile page!</p>
@@ -37,9 +35,26 @@
         <input type="file" id="profile-upload" accept="image/*" onchange="previewImage(event)">
         <p><strong>Name:</strong> John Doe</p>
         <p><strong>Email:</strong> john.doe@gmail.com</p>
+
+
+
+        <div class="card p-4" style="width:100%; max-width:400px; background-color:#3a3a3a; border:1px solid #555;">
+    
+    <h4 class="text-white text-center mb-1" id="username-display"></h4>
+    <p class="text-center mb-4" style="color:#b07aaa;" id="email-display"></p>
+
+
+
+</div>
    </div>
     
-    <script src="script.js"></script>
     <script src="auth.js"></script>
+    <script src="script.js"></script>
+<script>
+    const user = checkSession(); 
+    document.getElementById('username-display').textContent = user.name;
+    document.getElementById('email-display').textContent = user.email;
+</script>
+
 </body>
 </html>
