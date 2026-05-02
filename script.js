@@ -275,8 +275,6 @@ function loadUserReview(id) {
 
 // 9. Profile Page
 function loadProfilePage() {
-    // ✅ FIXED: use getCurrentUser() instead of checkSession()
-    // checkSession() was causing redirect loop
     const user = getCurrentUser();
     if (!user) {
         window.location.href = 'index.html';
@@ -298,7 +296,6 @@ function loadProfilePage() {
     document.getElementById('profile-upload').addEventListener('change', previewImage);
 }
 
-// Handle photo upload
 function previewImage(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -317,7 +314,6 @@ function previewImage(event) {
     reader.readAsDataURL(file);
 }
 
-// ✅ FIXED: header avatar - also updates fallback letter avatar if no photo
 function updateHeaderAvatar() {
     const photo = localStorage.getItem('profilePhoto');
     const avatar = document.getElementById('header-avatar');
@@ -325,12 +321,10 @@ function updateHeaderAvatar() {
 
     if (avatar) {
         if (photo) {
-            // ✅ use uploaded photo
             avatar.src = photo;
             avatar.style.display = 'inline-block';
             if (fallback) fallback.style.display = 'none';
         } else {
-            // ✅ no photo - keep showing the person icon button
             avatar.style.display = 'none';
             if (fallback) fallback.style.display = 'inline-block';
         }
@@ -343,14 +337,12 @@ function changePassword() {
     const confirmNewPassword = document.getElementById('confirmNewPassword').value;
     const msg = document.getElementById('password-msg');
 
-    // Helper to show message
     function showMsg(text, type) {
         msg.classList.remove('d-none', 'alert-danger', 'alert-success');
         msg.classList.add(type);
         msg.textContent = text;
     }
 
-    // Get current logged in user
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
     if (!currentPassword || !newPassword || !confirmNewPassword) {
@@ -358,7 +350,6 @@ function changePassword() {
         return;
     }
 
-    // ✅ Check if current password matches
     if (currentUser.password !== currentPassword) {
         showMsg('Current password is incorrect.', 'alert-danger');
         return;
@@ -379,7 +370,6 @@ function changePassword() {
         return;
     }
 
-    // ✅ Update password in both places in localStorage
     currentUser.password = newPassword;
     localStorage.setItem('currentUser', JSON.stringify(currentUser));       // update session
     localStorage.setItem(currentUser.email, JSON.stringify(currentUser));   // update stored account
