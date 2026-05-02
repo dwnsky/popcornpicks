@@ -277,41 +277,73 @@ function loadUserReview(id) {
 function loadProfilePage() {
     const user = getCurrentUser();
     if (!user) {
-        window.location.href = 'index.html';
+        window.location.href = 'login.html';
         return;
     }
 
     document.getElementById('username-display').textContent = user.name;
     document.getElementById('email-display').textContent = user.email;
 
-    const preview = document.getElementById('profile-preview');
     const savedPhoto = localStorage.getItem('profilePhoto');
+    document.getElementById('profile-preview').src = savedPhoto
+        ? savedPhoto
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=120&background=612D53&color=fff&rounded=true`;
 
-    if (savedPhoto) {
-        preview.src = savedPhoto;
-    } else {
-        preview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=120&background=612D53&color=fff&rounded=true`;
-    }
-
-    document.getElementById('profile-upload').addEventListener('change', previewImage);
+    document.getElementById('profile-upload').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Photo too large! Please upload under 2MB.");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-preview').src = e.target.result;
+            window._pendingPhoto = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
-function previewImage(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+function toggleEdit() {
+    const fields = document.getElementById('edit-fields');
+    const user = getCurrentUser();
+    document.getElementById('edit-username').value = user.name;
+    fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
+}
 
-    if (file.size > 2 * 1024 * 1024) {
-        alert("Photo too large! Please upload under 2MB.");
+function cancelEdit() {
+    document.getElementById('edit-fields').style.display = 'none';
+    window._pendingPhoto = null;
+    // restore original photo
+    const savedPhoto = localStorage.getItem('profilePhoto');
+    const user = getCurrentUser();
+    document.getElementById('profile-preview').src = savedPhoto
+        ? savedPhoto
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=120&background=612D53&color=fff&rounded=true`;
+}
+
+function saveEdits() {
+    const newName = document.getElementById('edit-username').value.trim();
+    if (!newName) {
+        alert("Username cannot be empty!");
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        localStorage.setItem('profilePhoto', e.target.result);
-        document.getElementById('profile-preview').src = e.target.result;
-        updateHeaderAvatar();
-    };
-    reader.readAsDataURL(file);
+    const currentUser = getCurrentUser();
+    currentUser.name = newName;
+
+    if (window._pendingPhoto) {
+        localStorage.setItem('profilePhoto', window._pendingPhoto);
+        window._pendingPhoto = null;
+    }
+
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    localStorage.setItem(currentUser.email, JSON.stringify(currentUser));
+
+    document.getElementById('username-display').textContent = newName;
+    document.getElementById('edit-fields').style.display = 'none';
+    updateHeaderAvatar();
 }
 
 function updateHeaderAvatar() {
@@ -349,32 +381,27 @@ function changePassword() {
         showMsg('Please fill in all fields.', 'alert-danger');
         return;
     }
-
     if (currentUser.password !== currentPassword) {
         showMsg('Current password is incorrect.', 'alert-danger');
         return;
     }
-
     if (newPassword.length < 6) {
         showMsg('New password must be at least 6 characters.', 'alert-danger');
         return;
     }
-
     if (newPassword !== confirmNewPassword) {
         showMsg('New passwords do not match.', 'alert-danger');
         return;
     }
-
     if (newPassword === currentPassword) {
         showMsg('New password must be different from current password.', 'alert-danger');
         return;
     }
 
     currentUser.password = newPassword;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));       // update session
-    localStorage.setItem(currentUser.email, JSON.stringify(currentUser));   // update stored account
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    localStorage.setItem(currentUser.email, JSON.stringify(currentUser));
 
-    // Clear inputs
     document.getElementById('currentPassword').value = '';
     document.getElementById('newPassword').value = '';
     document.getElementById('confirmNewPassword').value = '';
@@ -383,9 +410,7 @@ function changePassword() {
 }
 
 function deleteAccount() {
-    if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-        return;
-    }
+    if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
 
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     localStorage.removeItem(currentUser.email);

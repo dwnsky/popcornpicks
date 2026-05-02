@@ -25,43 +25,48 @@
     </header>
 
     <div class="profile-card">
-        <img id="profile-preview" src="" alt="Profile Photo">
+        <img id="profile-preview" src="default-avatar.png" alt="Profile Photo">
+        <input type="file" id="profile-upload" accept="image/*" hidden>
 
-        <input type="file" id="profile-upload" accept="image/*">
-        <label for="profile-upload" class="upload-label">
-            <i class="bi bi-camera"></i> Change Photo
-        </label>
+        <div class="d-flex align-items-center justify-content-center gap-2 mt-3">
+            <h4 id="username-display" class="text-white mb-0">John Doe</h4>
+            <i class="bi bi-pencil text-accent" id="edit-icon" style="cursor:pointer;" onclick="toggleEdit()"></i>
+        </div>
 
-        <h4 id="username-display" class="text-white mt-2"></h4>
-        <p id="email-display" style="color:#b07aaa; text-align:center;"></p>
+        <div id="edit-fields" class="edit-container">
+            <input type="text" id="edit-username" class="form-control auth-input mb-2" placeholder="New username">
+            <label for="profile-upload" class="btn btn-outline-secondary btn-sm rounded-pill mb-2">
+                <i class="bi bi-camera"></i> Change Photo
+            </label>
+            <br>
+            <button onclick="saveEdits()" class="btn btn-sm rounded-pill btn-save">Save</button>
+            <button onclick="cancelEdit()" class="btn btn-sm btn-outline-secondary rounded-pill">Cancel</button>
+        </div>
 
-        <button onclick="deleteAccount()" class="btn-delete-account">Delete Account</button>
+        <p id="email-display" class="text-accent text-center mt-2">user@example.com</p>
 
-        <hr style="border-color:#555;">
+        <hr class="hr-muted">
+
         <h6 class="text-white text-start">Change Password</h6>
-
         <div id="password-msg" class="alert d-none mt-2"></div>
 
         <div class="mb-2 text-start">
-            <label class="form-label" style="color:#C4C4C4;">Current Password</label>
+            <label class="form-label auth-label">Current Password</label>
             <input type="password" id="currentPassword" class="form-control auth-input" placeholder="Enter current password">
         </div>
 
         <div class="mb-2 text-start">
-            <label class="form-label" style="color:#C4C4C4;">New Password</label>
+            <label class="form-label auth-label">New Password</label>
             <input type="password" id="newPassword" class="form-control auth-input" placeholder="Enter new password">
         </div>
 
         <div class="mb-3 text-start">
-            <label class="form-label" style="color:#C4C4C4;">Confirm New Password</label>
+            <label class="form-label auth-label">Confirm New Password</label>
             <input type="password" id="confirmNewPassword" class="form-control auth-input" placeholder="Repeat new password">
         </div>
 
-        <button onclick="changePassword()" class="btn-change-password">Update Password</button>
-
-        <a href="index.html">
-            <button class="btn-done-editing">Done</button>
-        </a>
+        <button onclick="changePassword()" class="btn w-100 mb-2 btn-update-password">Update Password</button>
+        <button onclick="deleteAccount()" class="btn w-100 btn-delete"><i class="bi bi-trash3"></i>Delete Account</button>
     </div>
 
     <script src="auth.js"></script>
