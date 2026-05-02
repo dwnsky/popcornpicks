@@ -13,48 +13,60 @@
     <link rel="stylesheet" href="app.css">
 </head>
 <body>
-        <header>
-            <a href="index.html" class="brand-logo">
-                <i class="bi bi-film" align="middle"></i> PopcornPicks 
-            </a>
-            
-            <div class="user-actions">
-                <button onclick="handleLogout()" class="btn btn-outline-secondary rounded-pill">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </button>
-            </div>
-        </header>
-        
-    <p>Welcome to your profile page!</p>
-
-   <div class="container-profile">
-        <h2>My Profile</h2>
-        <div id="profile-container">
-            <img id="profile-preview" src="default-avatar.png" alt="Profile Preview">
+    <header>
+        <a href="index.html" class="brand-logo">
+            <i class="bi bi-film"></i> PopcornPicks
+        </a>
+        <div class="user-actions">
+            <button onclick="handleLogout()" class="btn btn-outline-secondary rounded-pill">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
         </div>
-        <input type="file" id="profile-upload" accept="image/*" onchange="previewImage(event)">
-        <p><strong>Name:</strong> John Doe</p>
-        <p><strong>Email:</strong> john.doe@gmail.com</p>
+    </header>
 
+    <div class="profile-card">
+        <!-- ✅ FIXED: src is empty, JS will fill it -->
+        <img id="profile-preview" src="" alt="Profile Photo">
 
+        <input type="file" id="profile-upload" accept="image/*">
+        <label for="profile-upload" class="upload-label">
+            <i class="bi bi-camera"></i> Change Photo
+        </label>
 
-        <div class="card p-4" style="width:100%; max-width:400px; background-color:#3a3a3a; border:1px solid #555;">
-    
-    <h4 class="text-white text-center mb-1" id="username-display"></h4>
-    <p class="text-center mb-4" style="color:#b07aaa;" id="email-display"></p>
+        <h4 id="username-display" class="text-white mt-2"></h4>
+        <p id="email-display" style="color:#b07aaa; text-align:center;"></p>
 
+        <button onclick="deleteAccount()" class="btn-delete-account">Delete Account</button>
 
+        <hr style="border-color:#555;">
+        <!-- ✅ NEW: Change Password Section -->
+        <h6 class="text-white text-start">Change Password</h6>
 
-</div>
-   </div>
-    
+        <div id="password-msg" class="alert d-none mt-2"></div>
+
+        <div class="mb-2 text-start">
+            <label class="form-label" style="color:#C4C4C4;">Current Password</label>
+            <input type="password" id="currentPassword" class="form-control auth-input" placeholder="Enter current password">
+        </div>
+
+        <div class="mb-2 text-start">
+            <label class="form-label" style="color:#C4C4C4;">New Password</label>
+            <input type="password" id="newPassword" class="form-control auth-input" placeholder="Enter new password">
+        </div>
+
+        <div class="mb-3 text-start">
+            <label class="form-label" style="color:#C4C4C4;">Confirm New Password</label>
+            <input type="password" id="confirmNewPassword" class="form-control auth-input" placeholder="Repeat new password">
+        </div>
+
+        <button onclick="changePassword()" class="btn-change-password">Update Password</button>
+
+        <a href="index.html">
+            <button class="btn-done-editing">Done</button>
+        </a>
+    </div>
+
     <script src="auth.js"></script>
     <script src="script.js"></script>
-<script>
-    const user = checkSession(); 
-    document.getElementById('username-display').textContent = user.name;
-    document.getElementById('email-display').textContent = user.email;
-</script>
-
 </body>
 </html>

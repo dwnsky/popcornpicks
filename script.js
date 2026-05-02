@@ -23,6 +23,14 @@ if (document.getElementById('watchlist-container')) {
     displayWatchlist();
 }
 
+// ✅ NEW: profile page init
+if (document.getElementById('profile-preview')) {
+    loadProfilePage();
+}
+
+// ✅ NEW: runs on every page to update header avatar
+updateHeaderAvatar();
+
 // 2. SEARCH FUNCTION (The missing piece!)
 async function performSearch() {
     const query = document.getElementById('search-input').value.trim();
@@ -263,4 +271,135 @@ function loadUserReview(id) {
             <p>${r.review}</p>
         </div>
     `).join('');
+}
+
+// 9. Profile Page
+function loadProfilePage() {
+    // ✅ FIXED: use getCurrentUser() instead of checkSession()
+    // checkSession() was causing redirect loop
+    const user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    document.getElementById('username-display').textContent = user.name;
+    document.getElementById('email-display').textContent = user.email;
+
+    const preview = document.getElementById('profile-preview');
+    const savedPhoto = localStorage.getItem('profilePhoto');
+
+    if (savedPhoto) {
+        preview.src = savedPhoto;
+    } else {
+        preview.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=120&background=612D53&color=fff&rounded=true`;
+    }
+
+    document.getElementById('profile-upload').addEventListener('change', previewImage);
+}
+
+// Handle photo upload
+function previewImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        alert("Photo too large! Please upload under 2MB.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        localStorage.setItem('profilePhoto', e.target.result);
+        document.getElementById('profile-preview').src = e.target.result;
+        updateHeaderAvatar();
+    };
+    reader.readAsDataURL(file);
+}
+
+// ✅ FIXED: header avatar - also updates fallback letter avatar if no photo
+function updateHeaderAvatar() {
+    const photo = localStorage.getItem('profilePhoto');
+    const avatar = document.getElementById('header-avatar');
+    const fallback = document.getElementById('header-avatar-fallback');
+
+    if (avatar) {
+        if (photo) {
+            // ✅ use uploaded photo
+            avatar.src = photo;
+            avatar.style.display = 'inline-block';
+            if (fallback) fallback.style.display = 'none';
+        } else {
+            // ✅ no photo - keep showing the person icon button
+            avatar.style.display = 'none';
+            if (fallback) fallback.style.display = 'inline-block';
+        }
+    }
+}
+
+function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+    const msg = document.getElementById('password-msg');
+
+    // Helper to show message
+    function showMsg(text, type) {
+        msg.classList.remove('d-none', 'alert-danger', 'alert-success');
+        msg.classList.add(type);
+        msg.textContent = text;
+    }
+
+    // Get current logged in user
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+        showMsg('Please fill in all fields.', 'alert-danger');
+        return;
+    }
+
+    // ✅ Check if current password matches
+    if (currentUser.password !== currentPassword) {
+        showMsg('Current password is incorrect.', 'alert-danger');
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        showMsg('New password must be at least 6 characters.', 'alert-danger');
+        return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+        showMsg('New passwords do not match.', 'alert-danger');
+        return;
+    }
+
+    if (newPassword === currentPassword) {
+        showMsg('New password must be different from current password.', 'alert-danger');
+        return;
+    }
+
+    // ✅ Update password in both places in localStorage
+    currentUser.password = newPassword;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));       // update session
+    localStorage.setItem(currentUser.email, JSON.stringify(currentUser));   // update stored account
+
+    // Clear inputs
+    document.getElementById('currentPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmNewPassword').value = '';
+
+    showMsg('Password updated successfully!', 'alert-success');
+}
+
+function deleteAccount() {
+    if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+        return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    localStorage.removeItem(currentUser.email);
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('profilePhoto');
+    window.location.href = 'index.html';
 }
