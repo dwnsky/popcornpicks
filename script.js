@@ -50,29 +50,7 @@ async function performSearch() {
         if (data.Response === "True") {
             container.innerHTML = ''; // Clear the "Searching..." message
             
-            container.innerHTML = data.Search.map(movie => {
-                const poster = movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/300x450';
-                const escapedTitle = movie.Title.replace(/'/g, "\\'");
-
-                return `
-                    <div class="movie-card text-start">
-                        <div class="poster-wrapper">
-                            <a href="moviedesc.html?id=${movie.imdbID}">
-                                <img src="${poster}" alt="${movie.Title}" class="img-fluid rounded">
-                            </a>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <div>
-                                <h5 class="mb-0 text-truncate" style="max-width: 150px;">${movie.Title}</h5>
-                                <small class="text-secondary">${movie.Year}</small>
-                            </div>
-                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${poster}')">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            container.innerHTML = data.Search.map(movie => createMovieCard(movie)).join('');
 
         } else {
             container.innerHTML = `<li>No results found for "${query}".</li>`;
@@ -105,16 +83,9 @@ async function fetchTrendingMovies() {
 
     if (data.Response === "True") {
         container.innerHTML = '';
+        container.className = 'movie-grid';
         data.Search.slice(0, 10).forEach(movie => {
-            const li = document.createElement('li');
-            const escapedTitle = movie.Title.replace(/'/g, "\\'");
-            li.innerHTML = `
-                <img src="${movie.Poster}" width="50">
-                <strong>
-  <a href="moviedesc.html?id=${movie.imdbID}" style="color:white; text-decoration:none;"> ${movie.Title} </a> </strong>
-                <button class="btn btn-outline-secondary rounded-pill" onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${movie.Poster}')"><i class="bi bi-plus"></i></button>
-            `;
-            container.appendChild(li);
+            container.innerHTML += createMovieCard(movie);
         });
     }
 }
@@ -129,18 +100,12 @@ function displayWatchlist() {
         return;
     }
 
-    container.innerHTML = watchlist.map((movie, index) => `
-        <li style="list-style:none; margin-bottom: 10px;">
-            <img src="${movie.poster}" width="50" style="vertical-align: middle; margin-right: 10px;">
-            <strong>${movie.title}</strong> (${movie.year})
-            <button class="btn btn-outline-secondary rounded-pill" onclick="removeFromWatchlist(${index})"><i class="bi bi-trash"></i></button>
-        </li>
-    `).join('');
+    container.innerHTML = watchlist.map(movie => createMovieCard(movie, 'remove')).join('');
 }
 
-function removeFromWatchlist(index) {
-    let watchlist = JSON.parse(localStorage.getItem('myWatchlist'));
-    watchlist.splice(index, 1);
+function removeFromWatchlist(title) {
+    let watchlist = JSON.parse(localStorage.getItem('myWatchlist')) || [];
+    watchlist = watchlist.filter(movie => movie.title !== title);
     localStorage.setItem('myWatchlist', JSON.stringify(watchlist));
     displayWatchlist();
 }
@@ -426,4 +391,40 @@ function deleteAccount() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('profilePhoto');
     window.location.href = 'index.html';
+}
+
+function createMovieCard(movie, mode = 'add') {
+    const poster = movie.poster || movie.Poster;
+    const title = movie.title || movie.Title;
+    const year = movie.year || movie.Year;
+    const imdbID = movie.imdbID || '';
+    const escapedTitle = title.replace(/'/g, "\\'");
+    const posterSrc = poster && poster !== 'N/A' ? poster : 'https://via.placeholder.com/300x450';
+
+    const button = mode === 'remove'
+        ? `<button class="btn btn-sm btn-outline-danger rounded-pill" 
+                onclick="removeFromWatchlist('${escapedTitle}')">
+                <i class="bi bi-dash"></i>
+           </button>`
+        : `<button class="btn btn-sm btn-outline-secondary rounded-pill" 
+                onclick="addToWatchlist('${escapedTitle}', '${year}', '${posterSrc}')">
+                <i class="bi bi-plus"></i>
+           </button>`;
+
+    return `
+        <div class="movie-card text-start">
+            <div class="poster-wrapper">
+                <a href="moviedesc.html?id=${imdbID}">
+                    <img src="${posterSrc}" alt="${title}" class="img-fluid rounded">
+                </a>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div>
+                    <h5 class="mb-0 text-truncate" style="max-width: 150px;">${title}</h5>
+                    <small class="text-secondary">${year}</small>
+                </div>
+                ${button}
+            </div>
+        </div>
+    `;
 }
