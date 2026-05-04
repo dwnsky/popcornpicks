@@ -160,3 +160,46 @@ body {
     background-color: #7a3868;
     color: white;
 }
+
+/* explore */
+.genre-pills button {
+    color: white;
+    border: solid 1px #555;
+    margin-top: 10px;
+}
+
+.genre-pills button.active {
+    background-color: #612D53;
+}
+
+.search-bar {
+    display: flex;
+    border: 1px solid #444;
+    border-radius: 50px;
+    width: 100%;
+    max-width: 600px;
+    padding: 10px;
+}
+
+.search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    margin-left: 5px;
+    flex: 1;
+}
+
+#search-button {
+    color: #888;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2rem;
+    width: 100%;
+    max-width: 1200px; 
+}

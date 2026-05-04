@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="app.css">
 </head>
-<body>
+<body >
     <header>
             <a href="index.html" class="brand-logo">
                 <i class="bi bi-film"></i> PopcornPicks
@@ -37,15 +37,30 @@
             </div>
         </header>
 
-    <div id="movie-list">
-        <h2>Explore Movies</h2>
-        <input type="text" id="search-input" placeholder="Search for a movie...">
-        <button id="search-button">Search</button>
+    
 
-        <ul id="explore-container">
-            <li>Type a movie title to start exploring!</li>
-        </ul>
-    </div>
+    <section class="hero d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 70vh;">
+        <h1>Discover Your Next Favorite Movie</h1>
+
+        <div class="search-bar">
+            
+            <input type="text" id="search-input" placeholder="Type a movie title...">
+            <i class="bi bi-search" id="search-button"></i>
+        </div>
+
+        <div class="genre-pills">
+            <button class="btn btn-outline-secondary rounded-pill">Action</button>
+            <button class="btn btn-outline-secondary rounded-pill">Comedy</button>
+            <button class="btn btn-outline-secondary rounded-pill">Drama</button>
+            <button class="btn btn-outline-secondary rounded-pill">Horror</button>
+            <button class="btn btn-outline-secondary rounded-pill">Sci-Fi</button>
+            <button class="btn btn-outline-secondary rounded-pill">Romance</button>
+        </div>
+
+        <div id="explore-container" class="movie-grid mt-4">
+            <!-- Movie cards will be injected here -->
+        </div>
+    </section>
 
     <script src="script.js"></script>
 </body>

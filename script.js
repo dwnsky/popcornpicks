@@ -50,21 +50,30 @@ async function performSearch() {
         if (data.Response === "True") {
             container.innerHTML = ''; // Clear the "Searching..." message
             
-            data.Search.forEach(movie => {
-                const li = document.createElement('li');
-                li.style.listStyle = "none";
-                li.style.marginBottom = "15px";
-                
-                // We escape the title so movies with apostrophes (like "Grey's Anatomy") don't break the button
+            container.innerHTML = data.Search.map(movie => {
+                const poster = movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/300x450';
                 const escapedTitle = movie.Title.replace(/'/g, "\\'");
-                
-                li.innerHTML = `
-                    <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/50'}" width="50" style="vertical-align: middle; margin-right: 10px;">
-                    <strong> <a href="moviedesc.html?id=${movie.imdbID}" style="color:white; text-decoration:none;">${movie.Title}</a> </strong>
-                    <button class="btn btn-outline-secondary rounded-pill" onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${movie.Poster}')"><i class="bi bi-plus"></i></button>
+
+                return `
+                    <div class="movie-card text-start">
+                        <div class="poster-wrapper">
+                            <a href="moviedesc.html?id=${movie.imdbID}">
+                                <img src="${poster}" alt="${movie.Title}" class="img-fluid rounded">
+                            </a>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div>
+                                <h5 class="mb-0 text-truncate" style="max-width: 150px;">${movie.Title}</h5>
+                                <small class="text-secondary">${movie.Year}</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="addToWatchlist('${escapedTitle}', '${movie.Year}', '${poster}')">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
                 `;
-                container.appendChild(li);
-            });
+            }).join('');
+
         } else {
             container.innerHTML = `<li>No results found for "${query}".</li>`;
         }
