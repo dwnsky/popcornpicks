@@ -62,7 +62,7 @@ async function performSearch() {
 }
 
 // 3. The Logic to "Add" a movie
-function addToWatchlist(title, year, poster) {
+function addToWatchlist(title, year, poster,imdbID) {
     let watchlist = JSON.parse(localStorage.getItem('myWatchlist')) || [];
     
     if (watchlist.some(movie => movie.title === title)) {
@@ -70,7 +70,7 @@ function addToWatchlist(title, year, poster) {
         return;
     }
 
-    watchlist.push({ title, year, poster });
+    watchlist.push({ title, year, poster, imdbID });
     localStorage.setItem('myWatchlist', JSON.stringify(watchlist));
     alert(`${title} added to watchlist!`);
 }
@@ -133,7 +133,7 @@ async function loadMoviePage() {
         `https://www.youtube.com/results?search_query=${movie.Title} trailer`;
     
     document.getElementById("watchlistBtn").addEventListener("click", () => {
-        addToWatchlist(movie.Title, movie.Year, movie.Poster);
+        addToWatchlist(movie.Title, movie.Year, movie.Poster, movie.imdbID);
     });
 
     renderStars(id);
@@ -407,7 +407,7 @@ function createMovieCard(movie, mode = 'add') {
                 <i class="bi bi-dash"></i>
            </button>`
         : `<button class="btn btn-sm btn-outline-secondary rounded-pill" 
-                onclick="addToWatchlist('${escapedTitle}', '${year}', '${posterSrc}')">
+                onclick="addToWatchlist('${escapedTitle}', '${year}', '${posterSrc}', '${imdbID}')">
                 <i class="bi bi-plus"></i>
            </button>`;
 
