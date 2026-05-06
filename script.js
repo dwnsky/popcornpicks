@@ -28,10 +28,9 @@ if (document.getElementById('profile-preview')) {
     loadProfilePage();
 }
 
-// ✅ NEW: runs on every page to update header avatar
 updateHeaderAvatar();
 
-// 2. SEARCH FUNCTION (The missing piece!)
+// 2. SEARCH FUNCTION 
 async function performSearch() {
     const query = document.getElementById('search-input').value.trim();
     const container = document.getElementById('explore-container');
@@ -60,6 +59,34 @@ async function performSearch() {
         console.error(error);
     }
 }
+
+// Genre filter buttons
+    if (document.querySelector('.genre-btn')) {
+        document.querySelectorAll('.genre-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                // Toggle active state
+                document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const genre = btn.dataset.genre;
+                const container = document.getElementById('explore-container');
+                container.innerHTML = '<p style="text-align:center;">Loading...</p>';
+
+                try {
+                    const response = await fetch(`https://www.omdbapi.com/?s=${genre}&type=movie&apikey=${API_KEY}`);
+                    const data = await response.json();
+
+                    if (data.Response === 'True') {
+                        container.innerHTML = data.Search.map(movie => createMovieCard(movie)).join('');
+                    } else {
+                        container.innerHTML = `<p style="text-align:center;">No results found for "${genre}".</p>`;
+                    }
+                } catch (err) {
+                    container.innerHTML = '<p style="text-align:center;">Error connecting to API.</p>';
+                }
+            });
+        });
+    }
 
 // 3. The Logic to "Add" a movie
 function addToWatchlist(title, year, poster) {
@@ -399,7 +426,13 @@ function createMovieCard(movie, mode = 'add') {
     const year = movie.year || movie.Year;
     const imdbID = movie.imdbID || '';
     const escapedTitle = title.replace(/'/g, "\\'");
-    const posterSrc = poster && poster !== 'N/A' ? poster : 'https://via.placeholder.com/300x450';
+    
+    let posterSrc = poster && poster !== 'N/A' ? poster : '';
+    posterSrc = posterSrc.replace(/^http:\/\//i, 'https://');
+    const fallback = 'https://placehold.co/300x450/1a1a2e/white?text=No+Poster';
+    if (!posterSrc) posterSrc = fallback;
+
+    const escapedPoster = encodeURIComponent(posterSrc);
 
     const button = mode === 'remove'
         ? `<button class="btn btn-sm btn-outline-danger rounded-pill" 
@@ -407,7 +440,7 @@ function createMovieCard(movie, mode = 'add') {
                 <i class="bi bi-dash"></i>
            </button>`
         : `<button class="btn btn-sm btn-outline-secondary rounded-pill" 
-                onclick="addToWatchlist('${escapedTitle}', '${year}', '${posterSrc}')">
+                onclick="addToWatchlist('${escapedTitle}', '${year}', decodeURIComponent('${escapedPoster}'), '${imdbID}')">
                 <i class="bi bi-plus"></i>
            </button>`;
 
