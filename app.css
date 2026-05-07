@@ -124,6 +124,30 @@ body {
     margin-top: 15px;
 }
 
+.header-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #612D53;
+    vertical-align: middle;
+}
+
+/* Default profile icon circle in profile page */
+.profile-default-icon {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid #612D53;
+    background-color: #2c2c2c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px auto;
+    font-size: 3rem;
+    color: #b07aaa;
+}
+
 /* auth */
 
 .auth-card {

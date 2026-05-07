@@ -286,9 +286,16 @@ function loadProfilePage() {
     document.getElementById('email-display').textContent = user.email;
 
     const savedPhoto = localStorage.getItem('profilePhoto');
-    document.getElementById('profile-preview').src = savedPhoto
-        ? savedPhoto
-        : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=120&background=612D53&color=fff&rounded=true`;
+    const preview = document.getElementById('profile-preview');
+
+    if (savedPhoto) {
+        preview.src = savedPhoto;
+        preview.style.display = 'block';
+        document.getElementById('profile-default-icon').style.display = 'none';
+    } else {
+        preview.style.display = 'none';
+        document.getElementById('profile-default-icon').style.display = 'flex';
+    }
 
     document.getElementById('profile-upload').addEventListener('change', function(event) {
         const file = event.target.files[0];
@@ -299,7 +306,9 @@ function loadProfilePage() {
         }
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('profile-preview').src = e.target.result;
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            document.getElementById('profile-default-icon').style.display = 'none';
             window._pendingPhoto = e.target.result;
         };
         reader.readAsDataURL(file);
@@ -316,12 +325,16 @@ function toggleEdit() {
 function cancelEdit() {
     document.getElementById('edit-fields').style.display = 'none';
     window._pendingPhoto = null;
-    // restore original photo
     const savedPhoto = localStorage.getItem('profilePhoto');
-    const user = getCurrentUser();
-    document.getElementById('profile-preview').src = savedPhoto
-        ? savedPhoto
-        : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&size=120&background=612D53&color=fff&rounded=true`;
+    const preview = document.getElementById('profile-preview');
+    if (savedPhoto) {
+        preview.src = savedPhoto;
+        preview.style.display = 'block';
+        document.getElementById('profile-default-icon').style.display = 'none';
+    } else {
+        preview.style.display = 'none';
+        document.getElementById('profile-default-icon').style.display = 'flex';
+    }
 }
 
 function saveEdits() {
@@ -344,23 +357,22 @@ function saveEdits() {
 
     document.getElementById('username-display').textContent = newName;
     document.getElementById('edit-fields').style.display = 'none';
+
     updateHeaderAvatar();
 }
 
 function updateHeaderAvatar() {
-    const photo = localStorage.getItem('profilePhoto');
-    const avatar = document.getElementById('header-avatar');
-    const fallback = document.getElementById('header-avatar-fallback');
+    const user = getCurrentUser();
+    const profileBtn = document.getElementById('profile-btn');
 
-    if (avatar) {
-        if (photo) {
-            avatar.src = photo;
-            avatar.style.display = 'inline-block';
-            if (fallback) fallback.style.display = 'none';
-        } else {
-            avatar.style.display = 'none';
-            if (fallback) fallback.style.display = 'inline-block';
-        }
+    if (!profileBtn) return;
+
+    const photo = localStorage.getItem('profilePhoto');
+
+    if (photo) {
+        profileBtn.innerHTML = `<img src="${photo}" alt="avatar" class="header-avatar">`;
+    } else {
+        profileBtn.innerHTML = `<button class="btn btn-outline-secondary rounded-pill"><i class="bi bi-person"></i></button>`;
     }
 }
 
