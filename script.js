@@ -89,17 +89,31 @@ async function performSearch() {
     }
 
 // 3. The Logic to "Add" a movie
-function addToWatchlist(title, year, poster,imdbID) {
-    let watchlist = JSON.parse(localStorage.getItem('myWatchlist')) || [];
-    
-    if (watchlist.some(movie => movie.title === title)) {
-        alert("This movie is already in your watchlist!");
+async function addToWatchlist(title, year, poster, imdbID) {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) {
+        alert("Please log in to save movies.");
         return;
     }
 
-    watchlist.push({ title, year, poster, imdbID });
-    localStorage.setItem('myWatchlist', JSON.stringify(watchlist));
-    alert(`${title} added to watchlist!`);
+    const movie = { title, year, poster, imdbID };
+    try {
+        const response = await fetch('http://localhost:3000/api/watchlist/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email, movie })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(`${title} added to your watchlist!`);
+        } else {
+            alert(result.message || "Could not add to watchlist.");
+        }
+    } catch (err) {
+        console.error("Connection error:", err);
+        alert("Failed to connect to the server.");
+    }
 }
 
 // 4. Function for Trending (Index)
@@ -118,23 +132,47 @@ async function fetchTrendingMovies() {
 }
 
 // 5. Function for Watchlist.html
-function displayWatchlist() {
+async function displayWatchlist() {
     const container = document.getElementById('watchlist-container');
-    const watchlist = JSON.parse(localStorage.getItem('myWatchlist')) || [];
+    const user = JSON.parse(localStorage.getItem('currentUser'));
 
-    if (watchlist.length === 0) {
-        container.innerHTML = '<p>Your watchlist is empty!</p>';
-        return;
+    if (!user) return;
+    try {
+        const response = await fetch(`http://localhost:3000/api/watchlist/${user.email}`);
+        const watchlist = await response.json();
+
+        if (watchlist.length === 0) {
+            container.innerHTML = '<p>Your watchlist is empty!</p>';
+            return;
+        }
+
+        container.innerHTML = watchlist.map(movie => createMovieCard(movie, 'remove')).join('');
+    } catch (err) {
+        console.error("Error loading watchlist:", err);
+        container.innerHTML = '<p>Error loading your watchlist.</p>';
     }
-
-    container.innerHTML = watchlist.map(movie => createMovieCard(movie, 'remove')).join('');
 }
 
-function removeFromWatchlist(title) {
-    let watchlist = JSON.parse(localStorage.getItem('myWatchlist')) || [];
-    watchlist = watchlist.filter(movie => movie.title !== title);
-    localStorage.setItem('myWatchlist', JSON.stringify(watchlist));
-    displayWatchlist();
+async function removeFromWatchlist(imdbID) {
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    if (!user) return;
+
+    try {
+        const response = await fetch('http://localhost:3000/api/watchlist/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email, imdbID: imdbID })
+        });
+
+        if (response.ok) {
+            console.log("Successfully removed");
+            displayWatchlist();
+        } else {
+            console.error("Server returned an error");
+        }
+    } catch (err) {
+        console.error("Network error:", err);
+    }
 }
 
 //6. Movie Desc
@@ -223,9 +261,9 @@ function updateStarsUI() {
 }
 
 //8. Review
-function saveReview() {
+async function saveReview() {
     const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+    const movieId = params.get("id"); 
     const reviewText = document.getElementById("reviewInput").value;
 
     if (currentRating === 0) {
@@ -234,44 +272,58 @@ function saveReview() {
     }
 
     const user = getCurrentUser();
-    const username = user ? user.name : "Guest";
-    let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
-
-    reviews.push({
-        id: id,
-        rating: currentRating,
-        review: reviewText,
-        user: username,
-    });
-
-    localStorage.setItem("reviews", JSON.stringify(reviews));
-
-    // Reset logic
-    document.getElementById("reviewInput").value = "";
-    currentRating = 0; // Reset the variable
-    updateStarsUI();   // Reset the visual stars
-    loadUserReview(id); // Refresh the list
-}
-
-function loadUserReview(id) {
-    const container = document.getElementById("userReview");
-
-    let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
-    let movieReviews = reviews.filter(r => r.id === id);
-
-    if (movieReviews.length === 0) {
-        container.innerHTML = "<p>No reviews yet.</p>";
+    if (!user) {
+        alert("Please log in to leave a review.");
         return;
     }
 
-    container.innerHTML = movieReviews.map(r => `
-        <div class="p-3 bg-secondary bg-opacity-25 rounded mb-2">
-            <strong>${r.user}</strong>
-            <small class="text-muted ms-2">${r.time || ""}</small>
-            <p class="text-warning">⭐ ${r.rating}/10</p>
-            <p>${r.review}</p>
-        </div>
-    `).join('');
+    const reviewData = { 
+        movieId, 
+        rating: currentRating, 
+        text: reviewText, 
+        name: user.name 
+    };
+
+    try {
+        const response = await fetch('http://localhost:3000/api/review/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email, reviewData })
+        });
+
+        if (response.ok) {
+            document.getElementById("reviewInput").value = "";
+            currentRating = 0;
+            updateStarsUI();
+            loadUserReview(movieId);
+        }
+    } catch (err) {
+        alert("Error saving review to database.");
+    }
+}
+
+async function loadUserReview(id) {
+    const container = document.getElementById("userReview");
+    
+    try {
+        const response = await fetch(`http://localhost:3000/api/reviews/${id}`);
+        const reviews = await response.json();
+
+        if (reviews.length === 0) {
+            container.innerHTML = "<p>No reviews yet.</p>";
+            return;
+        }
+
+        container.innerHTML = reviews.map(r => `
+            <div class="p-3 bg-secondary bg-opacity-25 rounded mb-2">
+                <strong>${r.name || "Anonymous"}</strong>
+                <p class="text-warning">⭐ ${r.rating}/10</p>
+                <p>${r.text}</p>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = "<p>Error loading reviews.</p>";
+    }
 }
 
 // 9. Profile Page
@@ -337,28 +389,46 @@ function cancelEdit() {
     }
 }
 
-function saveEdits() {
+async function saveEdits() {
     const newName = document.getElementById('edit-username').value.trim();
     if (!newName) {
         alert("Username cannot be empty!");
         return;
     }
-
     const currentUser = getCurrentUser();
-    currentUser.name = newName;
+    const photo = window._pendingPhoto || null;
 
-    if (window._pendingPhoto) {
-        localStorage.setItem('profilePhoto', window._pendingPhoto);
-        window._pendingPhoto = null;
+    try {
+        const response = await fetch('http://localhost:3000/api/profile/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: currentUser.email, 
+                name: newName, 
+                photo: photo 
+            })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            currentUser.name = result.name;
+            currentUser.profilePhoto = result.profilePhoto;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            if (result.profilePhoto) {
+                localStorage.setItem('profilePhoto', result.profilePhoto);
+            }
+
+            document.getElementById('username-display').textContent = result.name;
+            document.getElementById('edit-fields').style.display = 'none';
+            window._pendingPhoto = null;
+            updateHeaderAvatar();
+            alert("Profile updated successfully!");
+        }
+    } catch (err) {
+        console.error("Error saving profile:", err);
+        alert("Could not update profile.");
     }
-
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    localStorage.setItem(currentUser.email, JSON.stringify(currentUser));
-
-    document.getElementById('username-display').textContent = newName;
-    document.getElementById('edit-fields').style.display = 'none';
-
-    updateHeaderAvatar();
 }
 
 function updateHeaderAvatar() {
@@ -367,7 +437,7 @@ function updateHeaderAvatar() {
 
     if (!profileBtn) return;
 
-    const photo = localStorage.getItem('profilePhoto');
+    const photo = user ? user.profilePhoto : null;
 
     if (photo) {
         profileBtn.innerHTML = `<img src="${photo}" alt="avatar" class="header-avatar">`;
@@ -376,7 +446,7 @@ function updateHeaderAvatar() {
     }
 }
 
-function changePassword() {
+async function changePassword() {
     const currentPassword = document.getElementById('currentPassword').value;
     const newPassword = document.getElementById('newPassword').value;
     const confirmNewPassword = document.getElementById('confirmNewPassword').value;
@@ -388,48 +458,74 @@ function changePassword() {
         msg.textContent = text;
     }
 
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-
     if (!currentPassword || !newPassword || !confirmNewPassword) {
         showMsg('Please fill in all fields.', 'alert-danger');
         return;
     }
-    if (currentUser.password !== currentPassword) {
-        showMsg('Current password is incorrect.', 'alert-danger');
-        return;
-    }
+
     if (newPassword.length < 6) {
         showMsg('New password must be at least 6 characters.', 'alert-danger');
         return;
     }
+
     if (newPassword !== confirmNewPassword) {
         showMsg('New passwords do not match.', 'alert-danger');
         return;
     }
+
     if (newPassword === currentPassword) {
         showMsg('New password must be different from current password.', 'alert-danger');
         return;
     }
 
-    currentUser.password = newPassword;
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    localStorage.setItem(currentUser.email, JSON.stringify(currentUser));
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    try {
+        const response = await fetch('http://localhost:3000/api/password/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: user.email, 
+                currentPassword, 
+                newPassword 
+            })
+        });
 
-    document.getElementById('currentPassword').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmNewPassword').value = '';
-
-    showMsg('Password updated successfully!', 'alert-success');
+        const result = await response.json();
+        if (response.ok) {
+            showMsg('Password updated successfully!', 'alert-success');
+            document.querySelectorAll('#currentPassword, #newPassword, #confirmNewPassword')
+                    .forEach(input => input.value = '');
+        } else {
+            showMsg(result.message, 'alert-danger');
+        }
+    } catch (err) {
+        showMsg('Server connection error.', 'alert-danger');
+    }
 }
 
-function deleteAccount() {
+async function deleteAccount() {
     if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) return;
 
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    localStorage.removeItem(currentUser.email);
-    localStorage.removeItem('currentUser');
-    localStorage.removeItem('profilePhoto');
-    window.location.href = 'index.html';
+    if (!currentUser) return;
+
+    try {
+        const response = await fetch('http://localhost:3000/api/account/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentUser.email })
+        });
+
+        if (response.ok) {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        } else {
+            alert("Failed to delete account. Please try again.");
+        }
+    } catch (err) {
+        console.error("Error:", err);
+        alert("Connection error.");
+    }
 }
 
 function createMovieCard(movie, mode = 'add') {
@@ -448,7 +544,7 @@ function createMovieCard(movie, mode = 'add') {
 
     const button = mode === 'remove'
         ? `<button class="btn btn-sm btn-outline-danger rounded-pill" 
-                onclick="removeFromWatchlist('${escapedTitle}')">
+                onclick="removeFromWatchlist('${imdbID}')">
                 <i class="bi bi-dash"></i>
            </button>`
         : `<button class="btn btn-sm btn-outline-secondary rounded-pill" 

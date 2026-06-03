@@ -2,82 +2,95 @@
 
 
 
-function handleRegister() {
+async function handleRegister() {
     const name = document.getElementById('fullName').value;
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerConfirmPassword').value;
     const errorMsg = document.getElementById('error-msg');
 
-if (!name || !email || !password || !confirmPassword) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Please fill in all fields.';
-    return;
+    if (!name || !email || !password || !confirmPassword) {
+        errorMsg.classList.remove('d-none');
+        errorMsg.textContent = 'Please fill in all fields.';
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        errorMsg.classList.remove('d-none');
+        errorMsg.textContent = 'Passwords do not match.';
+        return;
+    }
+
+    if (password.length < 6) {
+        errorMsg.classList.remove('d-none');
+        errorMsg.textContent = 'Password must be at least 6 characters.';
+        return;
+    }
+
+    if (!email.includes('@')) {
+        errorMsg.classList.remove('d-none');
+        errorMsg.textContent = 'Please enter a valid email address.';
+        return;
+    }
+
+    const userData = { name, email, password };
+    try {
+        const response = await fetch('http://localhost:3000/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert('Registration successful! You can now log in.');
+            window.location.href = 'login.html';
+        } else {
+            errorMsg.classList.remove('d-none');
+            errorMsg.textContent = result.message;
+        }
+    } catch (err) {
+        console.error('Fetch error:', err);
+        errorMsg.classList.remove('d-none');
+        errorMsg.textContent = 'Could not connect to the server.';
+    }
 }
 
-if (password !== confirmPassword) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Passwords do not match.';
-    return;
-}
 
-if (password.length < 6) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Password must be at least 6 characters.';
-    return;
-}
-
-if (!email.includes('@')) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Please enter a valid email address.';
-    return;
-}
-
-const existingUser = localStorage.getItem(email);
-if (existingUser) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Email is already registered.';
-    return;
-}
-
-const user = {name, email, password};
-localStorage.setItem(email, JSON.stringify(user));
-alert('Registration successful! You can now log in.');
-window.location.href = 'login.html';
-}
-
-
-
-
-
-
-function handleLogin() {
+async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     const errorMsg = document.getElementById('error-msg');
 
-if (!email || !password) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Please fill in all fields.';
-    return;
-}
+    if (!email || !password) {
+        errorMsg.classList.remove('d-none');
+        errorMsg.textContent = 'Please fill in all fields.';
+        return;
+    }
 
-const stored = localStorage.getItem(email);
-if (!stored) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Email not found. Please register first.';
-    return;
-}
+    try {
+        const response = await fetch('http://localhost:3000/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
 
-const user = JSON.parse(stored);
-if (user.password !== password) {
-    errorMsg.classList.remove('d-none');
-    errorMsg.textContent = 'Incorrect password. Please try again.';
-    return;
-}
-    localStorage.setItem('currentUser', JSON.stringify(user));
-    window.location.href = 'index.html';
+        const result = await response.json();
 
+        if (response.ok) {
+            localStorage.setItem('currentUser', JSON.stringify(result.user));
+            window.location.href = 'index.html';
+        } else {
+            errorMsg.classList.remove('d-none');
+            errorMsg.textContent = result.message;
+        }
+    } catch (err) {
+        console.error(err);
+        errorMsg.classList.remove('d-none');
+        errorMsg.textContent = 'Server is unreachable.';
+    }
 }
 
 
