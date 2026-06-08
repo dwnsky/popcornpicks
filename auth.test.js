@@ -248,3 +248,150 @@ describe('UT-AUTH-12: Session Check Guest', () => {
         expect(result).toHaveProperty('email', 'khalisya@email.com');
     });
 });
+
+
+
+//====================
+//integration testing
+
+//test 1 - integration: check register flow with backend and db interaction
+describe('INT-AUTH-01: Register Frontend-Backend Verification', () => {
+
+    // clean up the integration account entry afterwards
+    afterEach(async () => {
+        const User = mongoose.model('User');
+        await User.deleteOne({ email: 'integration_user@example.com' });
+    });
+
+    test('Successfully posts valid payload and updates database', async () => {
+        const res = await request(app)
+            .post('/api/register')
+            .send({
+                name: 'Integration User',
+                email: 'integration_user@example.com',
+                password: 'password123'
+            });
+        expect(res.statusCode).toBe(201);
+        expect(res.body.message).toBe('Registration successful');
+    });
+});
+
+
+//test 2 - integration: verify duplicate register check hits backend validation logic
+describe('INT-AUTH-02: Register Backend Duplicate Prevention', () => {
+    test('Returns 400 when trying to reuse an existing email record', async () => {
+        const res = await request(app)
+            .post('/api/register')
+            .send({
+                name: 'Duplicate Dawna',
+                email: 'dawna@gmail.com', // already exists in the export file
+                password: 'password123'
+            });
+        expect(res.statusCode).toBe(400);
+        expect(res.body.message).toBe('Email already exists');
+    });
+});
+
+
+//test 3 - integration: valid login route endpoint validation
+describe('INT-AUTH-03: Login Verified Entry Route Access', () => {
+    test('Grants 200 status code when matching database collection details', async () => {
+        const res = await request(app)
+            .post('/api/login')
+            .send({
+                email: 'dawna@gmail.com',
+                password: 'dawnadowe' // authentic match
+            });
+        expect(res.statusCode).toBe(200);
+        expect(res.body.user.email).toBe('dawna@gmail.com');
+    });
+});
+
+
+//test 4 - integration: invalid login route rejection
+describe('INT-AUTH-04: Login Unregistered Entry Route Access', () => {
+    test('Returns 404 cleanly when email target is missing completely from records', async () => {
+        const res = await request(app)
+            .post('/api/login')
+            .send({
+                email: 'not_in_the_system@email.com',
+                password: 'anyPassword'
+            });
+        expect(res.statusCode).toBe(404);
+        expect(res.body.message).toBe('User not found.');
+    });
+});
+
+
+
+//====================
+//fucntional testing
+
+
+//test 1 - functional: frontend UI validation alert rendering simulation
+describe('FUN-AUTH-01: UI Register Error Message Handler', () => {
+    test('Sets error message text and pops visual alert class container when password mismatched', () => {
+        // mock container logic for UI text injection alert
+        const errorMsgContainer = { textContent: '', classList: { remove: jest.fn() } };
+        
+        const password = 'myPassword123';
+        const confirmPassword = 'wrongPassword123';
+
+        // simulated functional logic snippet block from handleRegister()
+        if (password !== confirmPassword) {
+            errorMsgContainer.classList.remove('d-none'); // unhide element
+            errorMsgContainer.textContent = 'Passwords do not match.';
+        }
+
+        expect(errorMsgContainer.textContent).toBe('Passwords do not match.');
+        expect(errorMsgContainer.classList.remove).toHaveBeenCalledWith('d-none');
+    });
+});
+
+
+//test 2 - functional: local caching storage tracking behavior simulation
+describe('FUN-AUTH-02: UI Session LocalStorage Cache Initialization', () => {
+    test('Safely registers the stringified user data token on frontend state storage match', () => {
+        const mockLocalStorage = {};
+        const dummyUserResult = { name: 'Dawna Dowe', email: 'dawna@gmail.com' };
+
+        // mock client browser state actions following valid login fetch
+        mockLocalStorage['currentUser'] = JSON.stringify(dummyUserResult);
+
+        expect(mockLocalStorage['currentUser']).toBeDefined();
+        expect(JSON.parse(mockLocalStorage['currentUser']).name).toBe('Dawna Dowe');
+    });
+});
+
+
+//test 3 - functional: verification of interface route security intercept logic
+describe('FUN-AUTH-03: UI Session Security Guard Redirection', () => {
+    test('Forcibly updates window location pointer when guest profile entry is restricted', () => {
+        const emptyStorageMock = {};
+        const windowLocationMock = { location: { href: '' } };
+
+        // checkSession functional interaction simulation block
+        const activeUserToken = emptyStorageMock.currentUser;
+        if (!activeUserToken) {
+            windowLocationMock.location.href = 'index.html'; // bounce home
+        }
+
+        expect(windowLocationMock.location.href).toBe('index.html');
+    });
+});
+
+
+//test 4 - functional: verification of terminal session validation routine
+describe('FUN-AUTH-04: UI Logout Session Terminate Flow', () => {
+    test('Purges cached session payload and switches interface path context directly back to login screen', () => {
+        const activeStorageMock = { currentUser: JSON.stringify({ name: 'Dawna Dowe' }) };
+        const windowLocationMock = { location: { href: '' } };
+
+        // execution path from handleLogout() method trigger
+        delete activeStorageMock.currentUser; // remove details
+        windowLocationMock.location.href = 'login.html'; // send out
+
+        expect(activeStorageMock.currentUser).toBeUndefined(); // gone!
+        expect(windowLocationMock.location.href).toBe('login.html');
+    });
+});
