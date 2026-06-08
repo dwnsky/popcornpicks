@@ -11,11 +11,26 @@ header {
     align-items: center;
 }
 
+
+header .nav-pills {
+    flex: 1;             /* ADD THIS */
+    display: flex;
+    justify-content: center; /* ADD THIS */
+}
+
+.user-actions {
+    flex: 1;             /* ADD THIS */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* ADD THIS */
+    gap: 5px;
+}
 .brand-logo {
     text-decoration: none;
     color: white;          
     font-size: 1.5rem;      
     font-weight: bold;
+    flex: 1; /* ADD THIS */
 }
 
 .nav-pills .nav-link{
@@ -26,11 +41,6 @@ header {
     background-color: #612D53;
 }
 
-.user-actions {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
 
 body {
     padding-top: 80px; 
