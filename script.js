@@ -1,11 +1,11 @@
-const API_KEY = 'c143b7e9';
+const OMDB_API_KEY = 'c143b7e9';
+const TMDB_API_KEY = 'a76d1fa9ebde534a910bffed83a13596'; 
 
 function getCurrentUser() {
     const user = localStorage.getItem("currentUser");
     return user ? JSON.parse(user) : null;
 } 
 
-// 1. Initialize pages based on which ID exists
 if (document.getElementById('movie-container')) {
     fetchTrendingMovies();
 }
@@ -13,7 +13,6 @@ if (document.getElementById('movie-container')) {
 if (document.getElementById('search-button')) {
     document.getElementById('search-button').addEventListener('click', performSearch);
     
-    // Optional: Allow pressing "Enter" key to search
     document.getElementById('search-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') performSearch();
     });
@@ -23,14 +22,12 @@ if (document.getElementById('watchlist-container')) {
     displayWatchlist();
 }
 
-// ✅ NEW: profile page init
 if (document.getElementById('profile-preview')) {
     loadProfilePage();
 }
 
 updateHeaderAvatar();
 
-// 2. SEARCH FUNCTION 
 async function performSearch() {
     const query = document.getElementById('search-input').value.trim();
     const container = document.getElementById('explore-container');
@@ -43,14 +40,11 @@ async function performSearch() {
     container.innerHTML = '<li>Searching...</li>';
 
     try {
-        const response = await fetch(`https://www.omdbapi.com/?s=${query}&apikey=${API_KEY}`);
+        const response = await fetch(`https://www.omdbapi.com/?s=${query}&apikey=${OMDB_API_KEY}`);
         const data = await response.json();
 
         if (data.Response === "True") {
-            container.innerHTML = ''; // Clear the "Searching..." message
-            
             container.innerHTML = data.Search.map(movie => createMovieCard(movie)).join('');
-
         } else {
             container.innerHTML = `<li>No results found for "${query}".</li>`;
         }
@@ -60,35 +54,49 @@ async function performSearch() {
     }
 }
 
-// Genre filter buttons
-    if (document.querySelector('.genre-btn')) {
-        document.querySelectorAll('.genre-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                // Toggle active state
-                document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+if (document.querySelector('.genre-btn')) {
+    document.querySelectorAll('.genre-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
 
-                const genre = btn.dataset.genre;
-                const container = document.getElementById('explore-container');
-                container.innerHTML = '<p style="text-align:center;">Loading...</p>';
+            const genreInput = btn.dataset.genre.toLowerCase();
+            const container = document.getElementById('explore-container');
+            container.innerHTML = '<p style="text-align:center;">Loading...</p>';
 
-                try {
-                    const response = await fetch(`https://www.omdbapi.com/?s=${genre}&type=movie&apikey=${API_KEY}`);
-                    const data = await response.json();
+            const genreMap = {
+                'action': 28, 'adventure': 12, 'animation': 16, 'comedy': 35, 
+                'crime': 80, 'documentary': 99, 'drama': 18, 'family': 10751, 
+                'fantasy': 14, 'history': 36, 'horror': 27, 'music': 10402, 
+                'mystery': 9648, 'romance': 10749, 'sci-fi': 878, 'science fiction': 878, 
+                'thriller': 53, 'war': 10752, 'western': 37
+            };
 
-                    if (data.Response === 'True') {
-                        container.innerHTML = data.Search.map(movie => createMovieCard(movie)).join('');
-                    } else {
-                        container.innerHTML = `<p style="text-align:center;">No results found for "${genre}".</p>`;
-                    }
-                } catch (err) {
-                    container.innerHTML = '<p style="text-align:center;">Error connecting to API.</p>';
+            const genreId = genreMap[genreInput];
+
+            if (!genreId) {
+                container.innerHTML = `<p style="text-align:center;">Genre "${btn.dataset.genre}" not recognized. Please check your HTML data-genre attribute!</p>`;
+                return; 
+            }
+
+            try {
+                const url = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}&sort_by=popularity.desc`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    container.innerHTML = data.results.map(movie => createMovieCard(movie)).join('');
+                } else {
+                    container.innerHTML = `<p style="text-align:center;">No results found for this genre selection.</p>`;
                 }
-            });
+            } catch (err) {
+                console.error("Genre parsing error:", err);
+                container.innerHTML = '<p style="text-align:center;">Error connecting to TMDB API.</p>';
+            }
         });
-    }
+    });
+}
 
-// 3. The Logic to "Add" a movie
 async function addToWatchlist(title, year, poster, imdbID) {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!user) {
@@ -116,22 +124,26 @@ async function addToWatchlist(title, year, poster, imdbID) {
     }
 }
 
-// 4. Function for Trending (Index)
 async function fetchTrendingMovies() {
     const container = document.getElementById('movie-container');
-    const response = await fetch(`https://www.omdbapi.com/?s=movie&type=movie&apikey=${API_KEY}`);
-    const data = await response.json();
+    if (!container) return;
 
-    if (data.Response === "True") {
-        container.innerHTML = '';
-        container.className = 'movie-grid';
-        data.Search.slice(0, 10).forEach(movie => {
-            container.innerHTML += createMovieCard(movie);
-        });
+    try {
+        const response = await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB_API_KEY}`);
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+            container.className = 'movie-grid';
+            container.innerHTML = data.results.slice(0, 10).map(movie => createMovieCard(movie)).join('');
+        } else {
+            container.innerHTML = '<p>No trending movies found today.</p>';
+        }
+    } catch (error) {
+        console.error("Error fetching TMDB trending payload:", error);
+        container.innerHTML = '<p>Error loading real-time trends.</p>';
     }
 }
 
-// 5. Function for Watchlist.html
 async function displayWatchlist() {
     const container = document.getElementById('watchlist-container');
     const user = JSON.parse(localStorage.getItem('currentUser'));
@@ -153,6 +165,7 @@ async function displayWatchlist() {
     }
 }
 
+// To delete watchlist
 async function removeFromWatchlist(imdbID) {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     if (!user) return;
@@ -165,17 +178,15 @@ async function removeFromWatchlist(imdbID) {
         });
 
         if (response.ok) {
-            console.log("Successfully removed");
             displayWatchlist();
-        } else {
-            console.error("Server returned an error");
         }
     } catch (err) {
         console.error("Network error:", err);
     }
 }
 
-//6. Movie Desc
+let globalVerifiedMovieId = ""; 
+
 document.addEventListener("DOMContentLoaded", () => {
     if (window.location.pathname.includes("moviedesc.html")) {
         loadMoviePage();
@@ -184,63 +195,102 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadMoviePage() {
     const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+    let id = params.get("id");
 
-    const res = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
-    const movie = await res.json();
+    console.log("1. URL raw ID detected:", id);
 
-    document.getElementById("title").innerText = movie.Title;
-    document.getElementById("desc").innerText = movie.Plot;
-    document.getElementById("poster").src = movie.Poster;
-    document.getElementById("ratingIMDB").innerText = movie.imdbRating;
+    if (!id) {
+        console.error("No movie ID found in URL scope.");
+        return;
+    }
 
-    document.getElementById("trailerLink").href =
-        `https://www.youtube.com/results?search_query=${movie.Title} trailer`;
-    
-    document.getElementById("watchlistBtn").addEventListener("click", () => {
-        addToWatchlist(movie.Title, movie.Year, movie.Poster, movie.imdbID);
-    });
+    const isNumericId = /^\d+$/.test(id);
 
-    renderStars(id);
-    loadUserReview(id);
+    if (isNumericId) {
+        console.log("2. Detected numeric TMDB ID. Requesting conversion mapping...");
+        try {
+            const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${TMDB_API_KEY}`);
+            const tmdbMovie = await tmdbRes.json();
+            
+            if (tmdbMovie && tmdbMovie.imdb_id) {
+                id = tmdbMovie.imdb_id;
+                console.log("3. Mapping conversion success! New structural ID:", id);
+            } else {
+                console.warn("3. TMDB did not return an underlying IMDb mapping string.");
+            }
+        } catch (err) {
+            console.error("Error linking external TMDB asset to target:", err);
+        }
+    } else {
+        console.log("2. Detected alphanumeric IMDb ID. Skipping conversion loop.");
+    }
+
+    globalVerifiedMovieId = id;
+
+    try {
+        console.log("4. Requesting movie package from OMDb using ID:", id);
+        const res = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${OMDB_API_KEY}`);
+        const movie = await res.json();
+
+        if (movie.Response === "False") {
+            document.getElementById("title").innerText = "Movie Not Found";
+            document.getElementById("desc").innerText = "We couldn't retrieve details for this resource item.";
+            return;
+        }
+
+        document.getElementById("title").innerText = movie.Title;
+        document.getElementById("desc").innerText = movie.Plot;
+        document.getElementById("poster").src = movie.Poster;
+        document.getElementById("ratingIMDB").innerText = movie.imdbRating;
+
+        document.getElementById("trailerLink").href = `https://www.youtube.com/results?search_query=${movie.Title} trailer`;
+        
+        const oldBtn = document.getElementById("watchlistBtn");
+        const newBtn = oldBtn.cloneNode(true);
+        oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+        newBtn.addEventListener("click", () => {
+            addToWatchlist(movie.Title, movie.Year, movie.Poster, movie.imdbID);
+        });
+
+        console.log("5. Triggering star and review list loads for:", id);
+        await renderStars(id);
+        await loadUserReview(id);
+        
+    } catch (error) {
+        console.error("Error painting user interface details layer:", error);
+    }
 }
 
-//7.Rating
 let currentRating = 0; 
 
-function renderStars(id) {
+async function renderStars(id) {
     const container = document.getElementById("stars");
+    if (!container) return;
     container.innerHTML = "";
 
-    let reviews = JSON.parse(localStorage.getItem("reviews")) || [];
     const user = getCurrentUser();
     const username = user ? user.name : "Guest";
 
-    // Find the latest review by this user for this movie
-    let existing = reviews
-        .filter(r => r.id === id && r.user === username)
-        .slice(-1)[0];
+    try {
+        const response = await fetch(`http://localhost:3000/api/reviews/${id}`);
+        const reviews = await response.json();
+        console.log(`6. Reviews downloaded for ${id}:`, reviews);
 
-    // Reset currentRating to the existing rating, or 0 if none exists
-    currentRating = existing ? existing.rating : 0;
+        let existing = reviews.filter(r => r.name === username).slice(-1)[0];
+        currentRating = existing ? existing.rating : 0;
+    } catch (err) {
+        console.error("Error matching existing star ratings from server:", err);
+        currentRating = 0;
+    }
 
     for (let i = 1; i <= 10; i++) {
         const star = document.createElement("i");
-        
-        // Initial UI state
-        star.className = i <= currentRating 
-            ? "bi bi-star-fill text-warning fs-3" 
-            : "bi bi-star fs-3 text-light";
-
+        star.className = i <= currentRating ? "bi bi-star-fill text-warning fs-3" : "bi bi-star fs-3 text-light";
         star.style.cursor = "pointer";
 
         star.addEventListener("click", () => {
-            // Logic: If they click the same star that is already the current rating, reset to 0
-            if (currentRating === i) {
-                currentRating = 0;
-            } else {
-                currentRating = i;
-            }
+            currentRating = (currentRating === i) ? 0 : i;
             updateStarsUI(); 
         });
 
@@ -250,21 +300,13 @@ function renderStars(id) {
 
 function updateStarsUI() {
     const stars = document.querySelectorAll("#stars i");
-
     stars.forEach((star, index) => {
-        if (index < currentRating) {
-            star.className = "bi bi-star-fill text-warning fs-3";
-        } else {
-            star.className = "bi bi-star fs-3 text-light";
-        }
+        star.className = index < currentRating ? "bi bi-star-fill text-warning fs-3" : "bi bi-star fs-3 text-light";
     });
 }
 
-//8. Review
 async function saveReview() {
-    const params = new URLSearchParams(window.location.search);
-    const movieId = params.get("id"); 
-    const reviewText = document.getElementById("reviewInput").value;
+    const reviewText = document.getElementById("reviewInput").value.trim();
 
     if (currentRating === 0) {
         alert("Please select a star rating!");
@@ -277,8 +319,10 @@ async function saveReview() {
         return;
     }
 
+    console.log("Submitting review to backend using verified ID target:", globalVerifiedMovieId);
+
     const reviewData = { 
-        movieId, 
+        movieId: globalVerifiedMovieId, 
         rating: currentRating, 
         text: reviewText, 
         name: user.name 
@@ -292,24 +336,28 @@ async function saveReview() {
         });
 
         if (response.ok) {
+            alert("Review saved successfully!");
             document.getElementById("reviewInput").value = "";
-            currentRating = 0;
-            updateStarsUI();
-            loadUserReview(movieId);
+            loadUserReview(globalVerifiedMovieId);
+        } else {
+            const errData = await response.json();
+            alert(errData.message || "Failed to save review.");
         }
     } catch (err) {
+        console.error("Database error saving review:", err);
         alert("Error saving review to database.");
     }
 }
 
 async function loadUserReview(id) {
     const container = document.getElementById("userReview");
+    if (!container) return;
     
     try {
         const response = await fetch(`http://localhost:3000/api/reviews/${id}`);
         const reviews = await response.json();
 
-        if (reviews.length === 0) {
+        if (!reviews || reviews.length === 0) {
             container.innerHTML = "<p>No reviews yet.</p>";
             return;
         }
@@ -317,16 +365,16 @@ async function loadUserReview(id) {
         container.innerHTML = reviews.map(r => `
             <div class="p-3 bg-secondary bg-opacity-25 rounded mb-2">
                 <strong>${r.name || "Anonymous"}</strong>
-                <p class="text-warning">⭐ ${r.rating}/10</p>
-                <p>${r.text}</p>
+                <p class="text-warning mb-1">⭐ ${r.rating}/10</p>
+                <p class="mb-0">${r.text}</p>
             </div>
         `).join('');
     } catch (err) {
+        console.error("Database reading error:", err);
         container.innerHTML = "<p>Error loading reviews.</p>";
     }
 }
 
-// 9. Profile Page
 function loadProfilePage() {
     const user = getCurrentUser();
     if (!user) {
@@ -402,11 +450,7 @@ async function saveEdits() {
         const response = await fetch('http://localhost:3000/api/profile/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                email: currentUser.email, 
-                name: newName, 
-                photo: photo 
-            })
+            body: JSON.stringify({ email: currentUser.email, name: newName, photo: photo })
         });
 
         const result = await response.json();
@@ -483,18 +527,13 @@ async function changePassword() {
         const response = await fetch('http://localhost:3000/api/password/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                email: user.email, 
-                currentPassword, 
-                newPassword 
-            })
+            body: JSON.stringify({ email: user.email, currentPassword, newPassword })
         });
 
         const result = await response.json();
         if (response.ok) {
             showMsg('Password updated successfully!', 'alert-success');
-            document.querySelectorAll('#currentPassword, #newPassword, #confirmNewPassword')
-                    .forEach(input => input.value = '');
+            document.querySelectorAll('#currentPassword, #newPassword, #confirmNewPassword').forEach(input => input.value = '');
         } else {
             showMsg(result.message, 'alert-danger');
         }
@@ -529,34 +568,39 @@ async function deleteAccount() {
 }
 
 function createMovieCard(movie, mode = 'add') {
-    const poster = movie.poster || movie.Poster;
     const title = movie.title || movie.Title;
-    const year = movie.year || movie.Year;
-    const imdbID = movie.imdbID || '';
+    let year = movie.release_date || movie.year || movie.Year;
+    if (year && year.includes('-')) year = year.split('-')[0];
+
+    const id = movie.imdbID || movie.id || ''; 
     const escapedTitle = title.replace(/'/g, "\\'");
     
-    let posterSrc = poster && poster !== 'N/A' ? poster : '';
-    posterSrc = posterSrc.replace(/^http:\/\//i, 'https://');
+    let poster = movie.poster || movie.Poster || movie.poster_path;
+    let posterSrc = '';
+
+    if (poster && poster !== 'N/A') {
+        if (poster.startsWith('/') || (!poster.startsWith('http') && poster.includes('.jpg'))) {
+            const cleanPath = poster.startsWith('/') ? poster : `/${poster}`;
+            posterSrc = `https://image.tmdb.org/t/p/w500${cleanPath}`;
+        } else {
+            posterSrc = poster.replace(/^http:\/\//i, 'https://');
+        }
+    }
+    
     const fallback = 'https://placehold.co/300x450/1a1a2e/white?text=No+Poster';
     if (!posterSrc) posterSrc = fallback;
 
     const escapedPoster = encodeURIComponent(posterSrc);
 
     const button = mode === 'remove'
-        ? `<button class="btn btn-sm btn-outline-danger rounded-pill" 
-                onclick="removeFromWatchlist('${imdbID}')">
-                <i class="bi bi-dash"></i>
-           </button>`
-        : `<button class="btn btn-sm btn-outline-secondary rounded-pill" 
-                onclick="addToWatchlist('${escapedTitle}', '${year}', decodeURIComponent('${escapedPoster}'), '${imdbID}')">
-                <i class="bi bi-plus"></i>
-           </button>`;
+        ? `<button class="btn btn-sm btn-outline-danger rounded-pill" onclick="removeFromWatchlist('${id}')"><i class="bi bi-dash"></i></button>`
+        : `<button class="btn btn-sm btn-outline-secondary rounded-pill" onclick="addToWatchlist('${escapedTitle}', '${year}', decodeURIComponent('${escapedPoster}'), '${id}')"><i class="bi bi-plus"></i></button>`;
 
     return `
         <div class="movie-card text-start">
             <div class="poster-wrapper">
-                <a href="moviedesc.html?id=${imdbID}">
-                    <img src="${posterSrc}" alt="${title}" class="img-fluid rounded">
+                <a href="moviedesc.html?id=${id}">
+                    <img src="${posterSrc}" alt="${title}" class="img-fluid rounded" loading="lazy">
                 </a>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-2">
