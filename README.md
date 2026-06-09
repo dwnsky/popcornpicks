@@ -60,7 +60,7 @@ PORT=3000
 
 ```
 
-*[Note: Ask the project lead for the shared team password. Do NOT commit your actual `.env` file to GitHub.]*
+*[Note: Ask the project leader for the shared team password. Do NOT commit your actual `.env` file to GitHub.]*
 
 ### 4. Running the Application
 
