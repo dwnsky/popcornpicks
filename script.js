@@ -419,7 +419,8 @@ function toggleEdit() {
     const fields = document.getElementById('edit-fields');
     const user = getCurrentUser();
     document.getElementById('edit-username').value = user.name;
-    fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
+    const isHidden = fields.style.display === '' || fields.style.display === 'none';
+    fields.style.display = isHidden ? 'block' : 'none';
 }
 
 function cancelEdit() {
