@@ -338,6 +338,8 @@ async function saveReview() {
         if (response.ok) {
             alert("Review saved successfully!");
             document.getElementById("reviewInput").value = "";
+            currentRating = 0;
+            updateStarsUI();
             loadUserReview(globalVerifiedMovieId);
         } else {
             const errData = await response.json();
