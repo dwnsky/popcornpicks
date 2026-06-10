@@ -2,23 +2,17 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const { app } = require('./server');
  
-// wait for mongodb to connect before all tests
+
 beforeAll(async () => {
     await new Promise(resolve => setTimeout(resolve, 3000));
 });
  
-// close db after all tests
+
 afterAll(async () => {
     await mongoose.connection.close();
 });
  
- 
-// ====================
-// UNIT TESTING
-// test individual logic functions in isolation
-// no server, no database, no browser needed
-// ====================
- 
+
 // UT-MOVIE-01: empty search query is rejected
 describe('UT-MOVIE-01: Search Empty Query', () => {
     function isQueryValid(query) {
@@ -71,7 +65,7 @@ describe('UT-MOVIE-02: Genre Map Lookup', () => {
 });
  
  
-// UT-MOVIE-03: poster URL is built correctly
+// UT-MOVIE-03: poster URL 
 describe('UT-MOVIE-03: Poster URL Construction', () => {
     function buildPosterUrl(poster) {
         if (!poster || poster === 'N/A') return 'https://placehold.co/300x450/1a1a2e/white?text=No+Poster';
@@ -146,13 +140,7 @@ describe('UT-MOVIE-05: Movie Card Mode Rendering', () => {
         expect(getButtonIcon('remove')).toBe('bi-dash');
     });
 });
- 
- 
-// ====================
-// INTEGRATION TESTING
-// test that API routes and MongoDB work together correctly
-// sends real HTTP requests and checks database responses
-// ====================
+
  
 // INT-MOVIE-01: watchlist endpoint returns data from MongoDB
 describe('INT-MOVIE-01: Watchlist Fetched from Database', () => {
@@ -256,12 +244,6 @@ describe('INT-MOVIE-05: Remove Movie Updates Database', () => {
     });
 });
  
- 
-// ====================
-// FUNCTIONAL TESTING
-// test complete user flows end to end
-// simulates the full journey a user takes
-// ====================
  
 // FUN-MOVIE-01: full add to watchlist flow
 describe('FUN-MOVIE-01: Add Movie to Watchlist Flow', () => {

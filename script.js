@@ -387,7 +387,7 @@ function loadProfilePage() {
     document.getElementById('username-display').textContent = user.name;
     document.getElementById('email-display').textContent = user.email;
 
-    const savedPhoto = localStorage.getItem('profilePhoto');
+    const savedPhoto = user.profilePhoto;
     const preview = document.getElementById('profile-preview');
 
     if (savedPhoto) {
@@ -428,7 +428,8 @@ function toggleEdit() {
 function cancelEdit() {
     document.getElementById('edit-fields').style.display = 'none';
     window._pendingPhoto = null;
-    const savedPhoto = localStorage.getItem('profilePhoto');
+    const user = getCurrentUser();
+    const savedPhoto = user ? user.profilePhoto : null;
     const preview = document.getElementById('profile-preview');
     if (savedPhoto) {
         preview.src = savedPhoto;
@@ -461,10 +462,6 @@ async function saveEdits() {
             currentUser.name = result.name;
             currentUser.profilePhoto = result.profilePhoto;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            
-            if (result.profilePhoto) {
-                localStorage.setItem('profilePhoto', result.profilePhoto);
-            }
 
             document.getElementById('username-display').textContent = result.name;
             document.getElementById('edit-fields').style.display = 'none';
