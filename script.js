@@ -402,8 +402,8 @@ function loadProfilePage() {
     document.getElementById('profile-upload').addEventListener('change', function(event) {
         const file = event.target.files[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) {
-            alert("Photo too large! Please upload under 2MB.");
+        if (file.size > 10 * 1024 * 1024) {
+            alert("Photo too large! Please upload under 10MB.");
             return;
         }
         const reader = new FileReader();
@@ -421,7 +421,8 @@ function toggleEdit() {
     const fields = document.getElementById('edit-fields');
     const user = getCurrentUser();
     document.getElementById('edit-username').value = user.name;
-    fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
+    const isHidden = fields.style.display === '' || fields.style.display === 'none';
+    fields.style.display = isHidden ? 'block' : 'none';
 }
 
 function cancelEdit() {
