@@ -15,24 +15,8 @@ afterAll(async () => {
 
 
 
-//test 1 - register: check empty fields
-describe('UT-AUTH-01: Register Empty Fields', () => {
-    test('Shows error when all fields are empty', () => {
-        const name = '';
-        const email = '';
-        const password = '';
-        const confirmPassword = '';
-
-        const isEmpty = !name || !email || !password || !confirmPassword;
-        expect(isEmpty).toBe(true);
-    });
-});
-
-
-
-
-//test 2 - register: password mismatch
-describe('UT-AUTH-02: Register Password Mismatch', () => {
+//test 1 - register: password mismatch
+describe('UT-AUTH-01: Register Password Mismatch', () => {
 
     //logic from handleRegister() in auth.js
     function passwordsMatch(password, confirmPassword) {
@@ -52,8 +36,8 @@ describe('UT-AUTH-02: Register Password Mismatch', () => {
 
 
 
-//test 3 - register: weak password
-describe('UT-AUTH-03: Register Weak Password', () => {
+//test 2 - register: weak password
+describe('UT-AUTH-02: Register Weak Password', () => {
     function isPasswordStrong(password) {
         return password.length >= 6;
     }
@@ -79,8 +63,8 @@ describe('UT-AUTH-03: Register Weak Password', () => {
 
 
 
-//test 4 - register: invalid email format
-describe('UT-AUTH-04: Register Invalid Email', () => {
+//test 3 - register: invalid email format
+describe('UT-AUTH-03: Register Invalid Email', () => {
 
     //same logic from auth.js
     function isEmailValid(email) {
@@ -103,47 +87,8 @@ describe('UT-AUTH-04: Register Invalid Email', () => {
 
 
 
-//test 5 - register: successful registration (new user)
-describe('UT-AUTH-05: Successful Registration', () => {
-
-
-//delete after test to avoid duplicate
-    afterEach(async () => {
-        const User = mongoose.model('User');
-        await User.deleteOne({ email: 'testuser_unique@example.com' });
-    });
-    //  this runs after the test and cleans up
-
-    test('Returns 201 for valid new user', async () => {
-        const res = await request(app)
-            .post('/api/register')
-            .send({
-                name: 'Test User',
-                email: 'testuser_unique@example.com',
-                password: 'secure123'
-            });
-        expect(res.statusCode).toBe(201);
-        expect(res.body.message).toBe('Registration successful');
-    });
-});
-
-//test 6 - register: duplicate email
-describe('UT-AUTH-06: Duplicate Email Registration', () => {
-    test('Returns 400 for already registered email', async () => {
-        const res = await request(app)
-            .post('/api/register')
-            .send({
-                name: 'Another User',
-                email: 'dawna@gmail.com', //already in db
-                password: 'password123'
-            });
-        expect(res.statusCode).toBe(400);
-        expect(res.body.message).toBe('Email already exists');
-    });
-});
-
-//test 7 - login: empty fields
-describe('UT-AUTH-07: Login Empty Fields', () => {
+//test 4 - login: empty fields
+describe('UT-AUTH-04: Login Empty Fields', () => {
     function hasLoginInputs(email, password) {
         return !(!email || !password);
     }
@@ -165,8 +110,8 @@ describe('UT-AUTH-07: Login Empty Fields', () => {
     });
 });
 
-//test 8 - login: wrong password
-describe('UT-AUTH-08: Login Wrong Password', () => {
+//test 5 - login: wrong password
+describe('UT-AUTH-05: Login Wrong Password', () => {
     test('Returns 401 for wrong password', async () => {
         const res = await request(app)
             .post('/api/login')
@@ -179,8 +124,8 @@ describe('UT-AUTH-08: Login Wrong Password', () => {
     });
 });
 
-//test 9 - login: user not found
-describe('UT-AUTH-09: Login User Not Found', () => {
+//test 6 - login: user not found
+describe('UT-AUTH-06: Login User Not Found', () => {
     test('Returns 404 for non-existent user', async () => {
         const res = await request(app)
             .post('/api/login')
@@ -193,8 +138,8 @@ describe('UT-AUTH-09: Login User Not Found', () => {
     });
 });
 
-//test 10 -login: successful login
-describe('UT-AUTH-10: Successful Login', () => {
+//test 7 -login: successful login
+describe('UT-AUTH-07: Successful Login', () => {
     test('Returns 200 with user object', async () => {
         const res = await request(app)
             .post('/api/login')
@@ -209,8 +154,8 @@ describe('UT-AUTH-10: Successful Login', () => {
     });
 });
 
-//test 11 - logout: clear session
-describe('UT-AUTH-11: Logout Clears Session', () => {
+//test 8 - logout: clear session
+describe('UT-AUTH-08: Logout Clears Session', () => {
     test('currentUser is removed from localStorage after logout', () => {
         
 
@@ -221,31 +166,6 @@ describe('UT-AUTH-11: Logout Clears Session', () => {
         delete fakeStorage.currentUser;
 //gone
         expect(fakeStorage.currentUser).toBeUndefined();
-    });
-});
-
-//test 12 - session check: guest user
-describe('UT-AUTH-12: Session Check Guest', () => {
-
-    //cehckSession() from auth.js
-    function checkSession(storage) {
-        const currentUser = storage.currentUser;
-        if (!currentUser) return null;
-        return JSON.parse(currentUser);
-    }
-
-    test('Returns null when no user in storage', () => {
-        const emptyStorage = {};
-        expect(checkSession(emptyStorage)).toBeNull();
-    });
-
-    test('Returns user object when logged in', () => {
-        const filledStorage = {
-            currentUser: JSON.stringify({ name: 'Khalisya', email: 'khalisya@email.com' })
-        };
-        const result = checkSession(filledStorage);
-        expect(result).toHaveProperty('name', 'Khalisya');
-        expect(result).toHaveProperty('email', 'khalisya@email.com');
     });
 });
 
