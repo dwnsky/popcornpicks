@@ -40,11 +40,24 @@ async function performSearch() {
     container.innerHTML = '<li>Searching...</li>';
 
     try {
-        const response = await fetch(`https://www.omdbapi.com/?s=${query}&apikey=${OMDB_API_KEY}`);
+        const response = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
         const data = await response.json();
 
-        if (data.Response === "True") {
-            container.innerHTML = data.Search.map(movie => createMovieCard(movie)).join('');
+        if (data.results && data.results.length > 0) {
+            container.innerHTML = data.results.map(movie => {
+                const posterUrl = movie.poster_path 
+                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+                    : 'https://via.placeholder.com/500x750?text=No+Poster+Available';
+
+                const normalizedMovie = {
+                    Title: movie.title,
+                    Year: movie.release_date ? movie.release_date.split('-')[0] : 'N/A',
+                    Poster: posterUrl,
+                    imdbID: movie.id
+                };
+
+                return createMovieCard(normalizedMovie);
+            }).join('');
         } else {
             container.innerHTML = `<li>No results found for "${query}".</li>`;
         }
